@@ -96,7 +96,7 @@ export default function Page() {
                     <GitFork className="ml-2 text-[#6f42c1] dark:text-[#8b949e]" />
                 </h1>
                 <p className="text-lg text-[#586069] dark:text-[#8b949e] max-w-md mx-auto">
-                    Sebagus apa github lu? beraninya mampir kesini, yang baperan minggir woy
+                    Eh kesini, udah ngerasa cakep github lu? sini gua rosting
                 </p>
             </header>
 
