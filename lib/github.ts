@@ -56,16 +56,19 @@ export async function findInformationGithubProfile(username: string) {
     return data
 }
 
-export async function getReadmeGithubProfile(username: string, branch?: string): Promise<string> {
+export async function getReadmeGithubProfile(username: string, branch?: string): Promise<string|null> {
     const getUrl = (branch: string) => `https://raw.githubusercontent.com/${username}/${username}/refs/heads/${branch}/README.md`
 
-    try {
-        const res = await axios.get(getUrl(branch ?? 'main'))
-        return res.data
-    } catch {
-        console.log('main branch not ');
+    for (const branchCheck of [branch, 'main', 'master']) {
+        if (!branchCheck) continue
+
+        try {
+            const res = await axios.get(getUrl(branchCheck))
+            return res.data
+        } catch {
+            console.log(`${branchCheck} branch not found for README.md ${username}`);
+        }
     }
 
-    const res = await axios.get(getUrl('master'))
-    return res.data
+    return null
 }
