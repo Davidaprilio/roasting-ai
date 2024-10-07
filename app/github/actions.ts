@@ -4,6 +4,7 @@ import { findInformationGithubProfile, getReadmeGithubProfile, isExistsGithubPro
 import { modelFunRoaster } from "@/lib/model"
 
 export async function generateGithubRoast(username: string, githubInfo?: Record<string, any>) {
+    console.log('GH Username:', username)
     if (githubInfo === undefined) {
         githubInfo = await findInformationGithubProfile(username)
     }
