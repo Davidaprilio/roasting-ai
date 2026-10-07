@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import type { RateLimitInfo } from '@/lib/github'
 
 const GITHUB_MESSAGES = [
-    { emoji: '🔥', title: 'Kompor roasting lagi didinginin', body: 'Kebanyakan yang minta dipanggang, GitHub sampe ngos-ngosan ngasih datanya.' },
+    { emoji: '🔥', title: 'Kompor roasting lagi didinginin', body: 'Kebanyakan yang minta dipanggang, GitHub sampe ngos-ngosan ngasih datanya.', hideReset: true },
     { emoji: '☕', title: 'Tukang roasting lagi ngopi dulu', body: 'Lidahnya kepanasan abis nyinyirin banyak profil. Sabar, bentar lagi pedes lagi.' },
     { emoji: '😮‍💨', title: 'Kuota nyinyir lagi mentok', body: 'GitHub bilang "udah dulu ya, kasian orangnya". Padahal kita belum puas.' },
     { emoji: '🧯', title: 'Dapur roasting lagi dipadamin', body: 'Terlalu banyak yang dibakar barusan, apinya perlu istirahat biar makin galak.' },
@@ -15,8 +15,10 @@ const AI_MESSAGES = [
     { emoji: '🤐', title: 'Mulut pedes lagi dikunci sementara', body: 'Jatah ngomong AI hari ini lagi abis. Simpen dulu mental lu buat nanti.' },
 ]
 
-export function pickRestMessage(source: RateLimitInfo['source']) {
-    const list = source === 'ai' ? AI_MESSAGES : GITHUB_MESSAGES
+type Message = { emoji: string, title: string, body: string, hideReset?: boolean }
+
+export function pickRestMessage(source: RateLimitInfo['source']): Message {
+    const list: Message[] = source === 'ai' ? AI_MESSAGES : GITHUB_MESSAGES
     return list[Math.floor(Math.random() * list.length)]
 }
 
@@ -41,8 +43,10 @@ export default function RestBadge({ message, resetAt }: { message: RestMessage, 
                     {message.title}
                 </p>
                 <p className='mt-1 opacity-90'>
-                    {message.body}{' '}
-                    {resetTime ? `Balik lagi sekitar jam ${resetTime} ya.` : 'Coba lagi beberapa saat lagi ya.'}
+                    {message.body}
+                    {!message.hideReset && (
+                        resetTime ? ` Balik lagi sekitar jam ${resetTime} ya.` : ' Coba lagi beberapa saat lagi ya.'
+                    )}
                 </p>
             </div>
         </motion.div>
