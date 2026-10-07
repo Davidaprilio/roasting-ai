@@ -85,7 +85,8 @@ export type RateLimitInfo = {
     resetAt?: number
 }
 
-// Detects GitHub API rate limit (403/429 with no remaining quota) and Gemini quota (429) errors
+// Detects GitHub API rate limit (403/429 with no remaining quota), Gemini quota (429)
+// and Gemini overload (503, once the fallback models are used up too) errors
 export function getRateLimitInfo(err: unknown): RateLimitInfo | null {
     if (err instanceof AxiosError && err.response) {
         const { status, headers } = err.response
@@ -96,7 +97,8 @@ export function getRateLimitInfo(err: unknown): RateLimitInfo | null {
         }
         return null
     }
-    if ((err as { status?: number } | null)?.status === 429) {
+    const status = (err as { status?: number } | null)?.status
+    if (status === 429 || status === 503) {
         return { source: 'ai' }
     }
     return null

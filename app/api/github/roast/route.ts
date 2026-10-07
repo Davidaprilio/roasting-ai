@@ -1,5 +1,5 @@
 import { findInformationGithubProfile, getRateLimitInfo, getReadmeGithubProfile, isExistsGithubProfile, type RateLimitInfo } from "@/lib/github"
-import { modelFunRoaster } from "@/lib/model"
+import { streamRoast } from "@/lib/model"
 import { markAiLimited } from "@/lib/rest-state"
 
 // Allow the AI more time; streaming keeps the connection alive meanwhile
@@ -64,10 +64,8 @@ export async function POST(req: Request) {
                     `Profile Markdown:\n${mdProfile}`,
                 ].join('\n')
 
-                const result = await modelFunRoaster.generateContentStream(prompt)
-                for await (const chunk of result.stream) {
-                    const text = chunk.text()
-                    if (text) send({ type: 'chunk', text })
+                for await (const text of streamRoast(prompt)) {
+                    send({ type: 'chunk', text })
                 }
                 send({ type: 'done' })
             } catch (err) {
