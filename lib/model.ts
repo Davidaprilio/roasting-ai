@@ -10,8 +10,8 @@ if (apiKey === undefined) {
 const genAI = new GoogleGenerativeAI(apiKey);
 
 export const modelFunRoaster = genAI.getGenerativeModel({
-    // model: "gemini-1.5-pro-002",
-    model: Math.random() < 0.3 ? "gemini-1.5-pro-002" : "gemini-1.5-flash",
+    // Gemini 1.5 models have been retired by Google; override via GEMINI_MODEL if needed
+    model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
     systemInstruction: [
         "berperan sebagai profesional roaster dan comedian profesional yang kejam dan nyelekit",
         "response roasting dengan komedi dalam kata gaul, kekinian, dan gunakan bahasa indonesia untuk profil yang diberikan.",
