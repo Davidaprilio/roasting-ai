@@ -31,10 +31,17 @@ export async function isExistsGithubProfile(username: string) {
     }
 }
 
+function githubApiHeaders() {
+    // Optional token raises the GitHub API rate limit from 60 to 5000 req/hour
+    const token = process.env.GITHUB_TOKEN
+    return token ? { Authorization: `Bearer ${token}` } : undefined
+}
+
 export async function findInformationGithubProfile(username: string) {
     const [userRes, repoRes] = await Promise.all([
-        axios.get(`https://api.github.com/users/${username}`),
+        axios.get(`https://api.github.com/users/${username}`, { headers: githubApiHeaders() }),
         axios.get(`https://api.github.com/users/${username}/repos`, {
+            headers: githubApiHeaders(),
             params: {
                 sort: 'updated',
                 per_page: 6
@@ -71,4 +78,36 @@ export async function getReadmeGithubProfile(username: string, branch?: string):
     }
 
     return null
+}
+export type RateLimitInfo = {
+    source: 'github' | 'ai'
+    // epoch milliseconds when the limit resets, if known
+    resetAt?: number
+}
+
+// Detects GitHub API rate limit (403/429 with no remaining quota) and Gemini quota (429) errors
+export function getRateLimitInfo(err: unknown): RateLimitInfo | null {
+    if (err instanceof AxiosError && err.response) {
+        const { status, headers } = err.response
+        const exhausted = headers['x-ratelimit-remaining'] === '0'
+        if (status === 429 || (status === 403 && exhausted)) {
+            const reset = Number(headers['x-ratelimit-reset'])
+            return { source: 'github', resetAt: reset ? reset * 1000 : undefined }
+        }
+        return null
+    }
+    if ((err as { status?: number } | null)?.status === 429) {
+        return { source: 'ai' }
+    }
+    return null
+}
+
+// Querying /rate_limit does not count against the quota
+export async function getGithubRateLimit() {
+    const res = await axios.get('https://api.github.com/rate_limit', { headers: githubApiHeaders() })
+    const core = res.data?.resources?.core ?? res.data?.rate
+    return {
+        remaining: Number(core?.remaining ?? 1),
+        resetAt: core?.reset ? Number(core.reset) * 1000 : undefined,
+    }
 }
