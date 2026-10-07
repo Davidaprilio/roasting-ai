@@ -10,6 +10,8 @@ export default function ThemeMode() {
 
     useEffect(() => {
         if (isDarkMode === undefined) {
+            // window is only available after mount, so the initial value is read here
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setIsDarkMode(window.matchMedia('(prefers-color-scheme: dark)').matches)
             return
         }

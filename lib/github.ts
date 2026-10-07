@@ -31,10 +31,17 @@ export async function isExistsGithubProfile(username: string) {
     }
 }
 
+function githubApiHeaders() {
+    // Optional token raises the GitHub API rate limit from 60 to 5000 req/hour
+    const token = process.env.GITHUB_TOKEN
+    return token ? { Authorization: `Bearer ${token}` } : undefined
+}
+
 export async function findInformationGithubProfile(username: string) {
     const [userRes, repoRes] = await Promise.all([
-        axios.get(`https://api.github.com/users/${username}`),
+        axios.get(`https://api.github.com/users/${username}`, { headers: githubApiHeaders() }),
         axios.get(`https://api.github.com/users/${username}/repos`, {
+            headers: githubApiHeaders(),
             params: {
                 sort: 'updated',
                 per_page: 6
