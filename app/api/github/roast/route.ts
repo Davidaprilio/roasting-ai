@@ -1,5 +1,6 @@
-import { findInformationGithubProfile, getReadmeGithubProfile, isExistsGithubProfile } from "@/lib/github"
+import { findInformationGithubProfile, getRateLimitInfo, getReadmeGithubProfile, isExistsGithubProfile, type RateLimitInfo } from "@/lib/github"
 import { modelFunRoaster } from "@/lib/model"
+import { markAiLimited } from "@/lib/rest-state"
 
 // Allow the AI more time; streaming keeps the connection alive meanwhile
 export const maxDuration = 60
@@ -11,6 +12,7 @@ export type RoastStreamEvent =
     | { type: 'user', user: { name: string | null, avatar: string | null } }
     | { type: 'chunk', text: string }
     | { type: 'not_found' }
+    | { type: 'rate_limited', limit: RateLimitInfo }
     | { type: 'error', message: string }
     | { type: 'done' }
 
@@ -40,6 +42,7 @@ export async function POST(req: Request) {
 
                 send({ type: 'status', message: `Lagi ngintip repo ${username}...` })
                 const githubInfo = await findInformationGithubProfile(username).catch((err) => {
+                    if (getRateLimitInfo(err)) throw err
                     console.error('Failed fetching github profile:', err?.message)
                     return undefined
                 })
@@ -69,6 +72,12 @@ export async function POST(req: Request) {
                 send({ type: 'done' })
             } catch (err) {
                 console.error('Roast failed:', err instanceof Error ? err.message : err)
+                const limit = getRateLimitInfo(err)
+                if (limit) {
+                    if (limit.source === 'ai') markAiLimited(limit.resetAt)
+                    send({ type: 'rate_limited', limit })
+                    return
+                }
                 send({ type: 'error', message: 'Something went wrong. Please try again.' })
             } finally {
                 controller.close()

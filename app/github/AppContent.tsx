@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
@@ -10,6 +10,8 @@ import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import ReactMarkdown from 'react-markdown'
 import type { RoastStreamEvent } from '@/app/api/github/roast/route'
+import type { RateLimitInfo } from '@/lib/github'
+import RestBadge, { pickRestMessage, type RestMessage } from './RestBadge'
 
 export default function AppContent() {
     const [username, setUsername] = useState('')
@@ -22,6 +24,28 @@ export default function AppContent() {
     }>()
     const [isRoasting, setIsRoasting] = useState(false)
     const [status, setStatus] = useState<string>()
+    const [rest, setRest] = useState<{ message: RestMessage, resetAt?: number }>()
+
+    const showRest = (limit: RateLimitInfo) => {
+        setRest({ message: pickRestMessage(limit.source), resetAt: limit.resetAt })
+    }
+
+    // Show the badge right away if GitHub's quota is already used up
+    useEffect(() => {
+        fetch('/api/github/status')
+            .then((res) => res.json())
+            .then((data) => {
+                if (data?.limited) setRest({ message: pickRestMessage(data.source === 'ai' ? 'ai' : 'github'), resetAt: data.resetAt })
+            })
+            .catch(() => {})
+    }, [])
+
+    // Hide the badge once the limit resets
+    useEffect(() => {
+        if (!rest?.resetAt) return
+        const timer = setTimeout(() => setRest(undefined), Math.max(rest.resetAt - Date.now(), 0) + 1000)
+        return () => clearTimeout(timer)
+    }, [rest])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -39,7 +63,11 @@ export default function AppContent() {
                     break
                 case 'chunk':
                     setStatus(undefined)
+                    setRest(undefined)
                     setRoastResult((prev) => prev && { ...prev, roast: prev.roast + event.text })
+                    break
+                case 'rate_limited':
+                    showRest(event.limit)
                     break
                 case 'not_found':
                     toast.warning('Username nya gak ada!, cek lagi yang bener')
@@ -89,6 +117,7 @@ export default function AppContent() {
 
     return (
         <main className="max-w-2xl mx-auto z-10 relative w-full">
+            {rest && <RestBadge message={rest.message} resetAt={rest.resetAt} />}
             <Card className='mb-8 dark:bg-[#161b22] dark:border-github-secondary bg-white border-[#e1e4e8] border shadow-sm transition-colors duration-20'>
                 <CardContent className="p-6">
                     <div className="rounded-t-2xl p-4 -mx-6 -mt-6 mb-4 border-b dark:border-github-secondary transition-colors duration-200">
