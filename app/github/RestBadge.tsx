@@ -7,7 +7,6 @@ const GITHUB_MESSAGES = [
     { emoji: '🔥', title: 'Kompor roasting lagi didinginin', body: 'Kebanyakan yang minta dipanggang, GitHub sampe ngos-ngosan ngasih datanya.', hideReset: true },
     { emoji: '☕', title: 'Tukang roasting lagi ngopi dulu', body: 'Lidahnya kepanasan abis nyinyirin banyak profil. Sabar, bentar lagi pedes lagi.' },
     { emoji: '😮‍💨', title: 'Kuota nyinyir lagi mentok', body: 'GitHub bilang "udah dulu ya, kasian orangnya". Padahal kita belum puas.' },
-    { emoji: '🧯', title: 'Dapur roasting lagi dipadamin', body: 'Terlalu banyak yang dibakar barusan, apinya perlu istirahat biar makin galak.' },
 ]
 
 const AI_MESSAGES = [
